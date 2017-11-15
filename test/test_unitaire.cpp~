@@ -1,0 +1,14 @@
+#include <parallel_conduction.hpp>
+#include <assert.h>
+
+void test_indice(){
+  int nx=5,ny=5;
+  int i,j,k;
+  k = 11;
+  indice(k,nx,ny,i,j);
+  assert(i == 2); assert(j == 1);
+}
+
+int main(){
+  test_indice();
+}

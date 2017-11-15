@@ -1,1 +1,0 @@
-/* parallel_conduction.cpp */
