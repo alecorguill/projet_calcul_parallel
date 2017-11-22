@@ -18,7 +18,7 @@ int main(int argc, char** argv){
   /* Parsing config file */
   config_t c;
   parse_file(argv[1],c);
-  
 
-  return 1;
+
+  return 0;
 }
