@@ -1,6 +1,11 @@
-#include <parallel_conduction.hpp>
+#include "parallel_conduction.hpp"
+#include "util.hpp"
+
 #include <assert.h>
 #include <stdio.h>
+#include <iostream>
+
+using namespace std;
 
 void test_indice(){
   printf("TEST INDICE...");
@@ -28,7 +33,22 @@ void test_charge(){
   assert(i0 == 12); assert(i1 == 16);
   printf("OK\n");
 }
+
+void test_parse_file(){
+  printf("TEST PARSE_FILE...");
+  config_t c;
+  parse_file("config.cfg", c);
+  assert(c.Nx == 1000);
+  assert(c.Ny == 1000);
+  assert(c.Lx == 1);
+  assert(c.Ly == 1);
+  assert(c.D == 1);
+  assert(c.choix == 1);
+  printf("OK\n");
+}
+
 int main(){
   test_indice();
   test_charge();
+  test_parse_file();
 }

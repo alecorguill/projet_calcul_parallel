@@ -1,7 +1,7 @@
 CC = g++
 CPP_FLAGS =
 DEBUG_FLAGS = -W -Wall -g
-OBJ = parallel_conduction.o
+OBJ = parallel_conduction.o util.o
 MAIN = main.o 
 PROG = run
 HEADER_DIR = header
