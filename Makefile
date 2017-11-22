@@ -1,4 +1,5 @@
-CC = g++
+CC = mpic++
+MPI_FLAGS = 
 CPP_FLAGS =
 DEBUG_FLAGS = -W -Wall -g
 OBJ = parallel_conduction.o util.o
