@@ -1,5 +1,7 @@
 /* parallel_conduction.cpp */
 
+#include "util.hpp"
+
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>

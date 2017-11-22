@@ -5,7 +5,8 @@ DEBUG_FLAGS = -W -Wall -g
 OBJ = parallel_conduction.o util.o
 MAIN = main.o 
 PROG = run
-HEADER_DIR = header
+HEADER_DIRS = header Eigen/Eigen
+HEADER_FLAGS = $(foreach dir, $(HEADER_DIRS),-I$(dir))
 
 vpath %.cpp test src
 vpath %.hpp header
@@ -20,12 +21,12 @@ $(PROG):$(OBJ) $(MAIN)
 	$(CC) $^ -o $@
 
 %.o: %.cpp
-	$(CC) $(CPP_FLAGS) -I$(HEADER_DIR) -c $< -o $@
+	$(CC) $(CPP_FLAGS) $(HEADER_FLAGS) -c $< -o $@
 
 test: test_unitaire
 
 test_unitaire : $(OBJ) test_unitaire.o
-	$(CC) $(CPP_FLAGS) -I$(HEADER_DIR) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CPP_FLAGS) $(HEADER_FLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -f *.o *~ $(PROG)
