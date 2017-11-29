@@ -1,5 +1,5 @@
 #ifndef UTIL_H
-#define UTIL_h
+#define UTIL_H
 
 typedef struct {
   double Lx;
@@ -15,4 +15,5 @@ typedef struct {
 } config_t;
 
 void parse_file(char* filename, config_t& c);
+
 #endif

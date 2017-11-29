@@ -6,16 +6,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <Eigen>
+#include <mpi.h>
 
 double f(int i, int j, config_t& c){
   double x = i*c.dx;
   double y = j*c.dy;
   if(c.choix == 0)
-    return 2*(x-x*x+y-y*y);
+  return 2*(x-x*x+y-y*y);
   else if(c.choix == 1)
-    return sin(x)+cos(y);
+  return sin(x)+cos(y);
   else if(c.choix == 2)
-    return exp(-pow((x-c.Lx*0.5),2))*exp(-pow((y-c.Ly*0.5),2))*cos((M_PI*0.5)*c.dt);
+  return exp(-pow((x-c.Lx*0.5),2))*exp(-pow((y-c.Ly*0.5),2))*cos((M_PI*0.5)*c.dt);
   else{
     fprintf(stderr, "CHOIX FONCTION INVALID");
     exit(EXIT_FAILURE);
@@ -26,9 +27,9 @@ double g(int i, int j, config_t& c){
   double x = i*c.dx;
   double y = j*c.dy;
   if(c.choix == 0 || c.choix == 2)
-    return 0;
+  return 0;
   else if(c.choix == 1)
-    return sin(x)+cos(y);
+  return sin(x)+cos(y);
   else{
     fprintf(stderr, "CHOIX FONCTION INVALID");
     exit(EXIT_FAILURE);
@@ -39,11 +40,11 @@ double h(int i, int j, config_t& c){
   double x = i*c.dx;
   double y = j*c.dy;
   if(c.choix == 0)
-    return 0;
+  return 0;
   else if(c.choix == 1)
-    return sin(x)+cos(y);
+  return sin(x)+cos(y);
   else if(c.choix == 2)
-    return 1;
+  return 1;
   else{
     fprintf(stderr, "CHOIX FONCTION INVALID");
     exit(EXIT_FAILURE);
@@ -82,7 +83,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
 {
   MPI_Status Status;
 
-  int i0, i1, i, j, Nyloc;
+  int i0, i1, i, j, Nyloc, tag(10);
   double alpha, beta_y, beta_x;
   alpha = 1/c.dt + 2*c.D/(c.dx*c.dx) + 2*c.D/(c.dy*c.dy);
   beta_x = -c.D/(c.dx*c.dx);
@@ -91,28 +92,29 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
   charge(me, i0, i1, c);
   Nyloc = i1-i0+1;
 
-  Eigen::VectorXd floc, g1, g2, env2;
-
-  floc.resize(Nyloc*c.Nx);
-  floc = 0.;
+  Eigen::VectorXd g1, g2, env2;
+  Eigen::VectorXd floc = Eigen::VectorXd::Zero(Nyloc*c.Nx);
   g1.resize(c.Nx);
   g2.resize(c.Nx);
 
   if(me!=0)
   {
-    Eigen::VectorXd env1;
-    env1.resize(c.Nx);
+    double env1[c.Nx];
     for(int i=0; i<c.Nx; i++)
     {
-      env1(i) = ;
+      env1[i] = u(i);
     }
-
-    MPI_Send()
+    MPI_Send(env1, c.Nx, MPI_DOUBLE, me-1, tag, MPI_COMM_WORLD);
   }
+
   if(me!=c.np-1)
   {
-    Eigen::VectorXd env2;
-    env2.resize(c.Nx);
+    double env2[c.Nx];
+    for(int i=Nyloc*(c.Nx-2); i<Nyloc*c.Nx-1; i++)
+    {
+      env2[i] = u(i);
+    }
+    MPI_Send(env2, c.Nx, MPI_DOUBLE, me+1, tag, MPI_COMM_WORLD);
   }
 
   // Envoie des informations des processeurs précédants le bord haut (env1) et le bas (env2)
@@ -121,22 +123,36 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
 
   // Appel des vecteurs pour le bord haut (g1) et bas (g2) de la matrice initiale
 
-  for(int i=0; i<c.Nx; i++)
+
+  if (me == 0)
   {
-    if (me == 0)
+    double rev1[c.Nx];
+    MPI_Recv(rev1, c.Nx, MPI_DOUBLE, me+1, tag, MPI_COMM_WORLD, &Status);
+    for(int i=0; i<c.Nx; i++)
     {
-      g1(i) = c.D*g(c.dx, c.dy, i, 0, c.choix)/(c.dy*c.dy);
-      g2(i) = ;
+      g1(i) = c.D*g(i, 0, c)/(c.dy*c.dy);
+      g2(i) = c.D*rev1[i]/(c.dy*c.dy);
     }
-    else if (me == c.np-1)
+  }
+  else if (me == c.np-1)
+  {
+    double rev2[c.Nx];
+    MPI_Recv(rev2, c.Nx, MPI_DOUBLE, me-1, tag, MPI_COMM_WORLD, &Status);
+    for(int i=0; i<c.Nx; i++)
     {
-      g2(i) = c.D*g(c.dx, c.dy, i, c.np-1, c.choix)/(c.dy*c.dy);
-      g1(i) = ;
+      g2(i) = c.D*g(i, c.np-1, c)/(c.dy*c.dy);
+      g1(i) = c.D*rev2[i]/(c.dy*c.dy);
     }
-    else
+  }
+  else
+  {
+    double rev1[c.Nx], rev2[c.Nx];
+    MPI_Recv(rev1, c.Nx, MPI_DOUBLE, me+1, tag, MPI_COMM_WORLD, &Status);
+    MPI_Recv(rev2, c.Nx, MPI_DOUBLE, me-1, tag, MPI_COMM_WORLD, &Status);
+    for(int i=0; i<c.Nx; i++)
     {
-      g1(i) = ;
-      g2(i) = ;
+      g1(i) = c.D*rev2[i]/(c.dy*c.dy);
+      g2(i) = c.D*rev1[i]/(c.dy*c.dy);
     }
 
 
@@ -151,20 +167,20 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
       // Rajoute des termes pour la matrice initiale gauche et droite
       if ((i==0) || (i==c.Nx-1))
       {
-        floc(i+j*c.Nx) = f(c.dx, c.dy, c.Lx, c.Ly, i, j, c.dt, c.choix) + c.D*h(c.dx, c.dy, i, j, c.choix)/(c.dx*c.dx);
+        floc(i+j*c.Nx) = f(i,j,c) + c.D*h(i, j, c)/(c.dx*c.dx);
       }
       else
       {
-      floc(i+j*c.Nx) = f(c.dx, c.dy, c.Lx, c.Ly, i, j, c.dt, c.choix);
+      floc(i+j*c.Nx) = f(i,j,c);
       }
       // Rajoute des termes pour la matrice initiale haut et bas
       if (j==0)
       {
-        floc(i+j*c.Nx) =+ ;
+        floc(i+j*c.Nx) =+ g1(i);
       }
       else if (j==Nyloc-1)
       {
-        floc(i+j*c.Nx) =+ ;
+        floc(i+j*c.Nx) =+ g2(i);
       }
     }
   }
