@@ -2,7 +2,7 @@
 #define PARALLEL_CONDUCTION
 
 #include "util.hpp"
-#include "Dense"
+#include "Eigen"
 
 /* flux */
 double f(int i, int j, config_t& c);

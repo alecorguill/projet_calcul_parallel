@@ -87,8 +87,9 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
 
   charge(me, i0, i1, c);
   Nyloc = i1-i0+1;
+  std::cout<<"Voila la valeur de Nyloc " <<Nyloc<<"pour me = "<< me <<std::endl;
 
-  Eigen::VectorXd g1, g2, env2;
+  Eigen::VectorXd g1, g2;
   Eigen::VectorXd floc = Eigen::VectorXd::Zero(Nyloc*c.Nx);
   g1.resize(c.Nx);
   g2.resize(c.Nx);
@@ -108,9 +109,9 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
   if(me!=c.np-1)
   {
     double env2[c.Nx];
-    for(int i=Nyloc*(c.Nx-2); i<Nyloc*c.Nx-1; i++)
+    for(int i=0; i<c.Nx; i++)
     {
-      env2[i] = u(i);
+      env2[i] = u(i+c.Nx*(Nyloc-1));
     }
     MPI_Send(env2, c.Nx, MPI_DOUBLE, me+1, tag+2*me+1, MPI_COMM_WORLD);
   }
@@ -121,20 +122,14 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
 
   // Appel des vecteurs pour le bord haut (g1) et bas (g2) de la matrice initiale
 
-  std::cout << "bite" << std::endl;
-
-  if (me == 0)
+  if (me==0)
   {
-    std::cout << "bite1" << std::endl;
-
     double rev1[c.Nx];
     MPI_Recv(rev1, c.Nx, MPI_DOUBLE, me+1, tag+2*(me+1), MPI_COMM_WORLD, &Status);
     for(int i=0; i<c.Nx; i++)
     {
       g1(i) = c.D*g(i, 0, c)/(c.dy*c.dy);
       g2(i) = c.D*rev1[i]/(c.dy*c.dy);
-      std::cout << "bite2" << std::endl;
-
     }
   }
   else if (me == c.np-1)
@@ -145,8 +140,6 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
     {
       g2(i) = c.D*g(i, c.np-1, c)/(c.dy*c.dy);
       g1(i) = c.D*rev2[i]/(c.dy*c.dy);
-      std::cout << "bite5" << std::endl;
-
     }
   }
   else
@@ -159,10 +152,9 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
       g1(i) = c.D*rev2[i]/(c.dy*c.dy);
       g2(i) = c.D*rev1[i]/(c.dy*c.dy);
     }
-
-
   }
-  std::cout << "bite3" << std::endl;
+
+
 
 
   for (int j=0; j<Nyloc; j++) // Numérotation ligne par ligne donc j en première boucle
