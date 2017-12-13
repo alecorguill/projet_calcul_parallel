@@ -20,7 +20,7 @@ debug : all
 $(PROG):$(OBJ) $(MAIN)
 	$(CC) $^ -o $@
 
-%.o: %.cpp
+%.o: %.cpp %.hpp
 	$(CC) $(CPP_FLAGS) $(HEADER_FLAGS) -c $< -o $@
 
 test: test_unitaire

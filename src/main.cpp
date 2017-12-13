@@ -3,7 +3,10 @@
 #include "main.hpp"
 #include "util.hpp"
 
-
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <iostream>
 #include <stdio.h>
 #include <unistd.h>
@@ -21,6 +24,15 @@ int main(int argc, char** argv){
   int me, size;
   MPI_Comm_rank(MPI_COMM_WORLD, &me);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
+  
+  /* output file */
+  int output = open("output", O_CREAT | O_WRONLY | O_TRUNC,0744);
+  if (!output){
+    perror("open : fichier output\n");
+    MPI_Finalize();
+    return EXIT_FAILURE;
+  }
+
   /* Parsing config file */
   config_t c;
   parse_file(argv[1],c);
@@ -28,6 +40,7 @@ int main(int argc, char** argv){
   c.dx = c.Lx/(c.Nx+1);
   c.dy = c.Ly/(c.Ny+1);
   c.dt = 0.1;
+  c.output = output;
   int i0,i1,kmax,m,n,i,Nyloc;
   double tolerance(1.E-6);
   kmax =100;
@@ -55,7 +68,7 @@ int main(int argc, char** argv){
     cout<<i<<endl;
     fflush(stdout);
   }
-
+  log_result(c.output,u);
 
   if (c.choix == 0)
   {
@@ -65,8 +78,7 @@ int main(int argc, char** argv){
       //cout<< "test " << i0  << " " << i1 << " " << i << " " << " " << m << " "  << n <<  endl;
       //cout << 2*( m*c.dx*(1-m*c.dx)*n*c.dy*(1-n*c.dy)) << endl;
     }
-  }
-
+  }  
   MPI_Finalize();
 
   return 0;

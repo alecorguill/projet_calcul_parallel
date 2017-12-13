@@ -7,6 +7,11 @@
 #include <stdlib.h>
 #include <Eigen>
 #include <mpi.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 double f(int i, int j, config_t& c){
   double x = i*c.dx;
