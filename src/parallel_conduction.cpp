@@ -17,11 +17,11 @@ double f(int i, int j, config_t& c){
   double x = i*c.dx;
   double y = j*c.dy;
   if(c.choix == 0)
-  return 2*(x-x*x+y-y*y);
+    return 2*(x-x*x+y-y*y);
   else if(c.choix == 1)
-  return sin(x)+cos(y);
+    return sin(x)+cos(y);
   else if(c.choix == 2)
-  return exp(-pow((x-c.Lx*0.5),2))*exp(-pow((y-c.Ly*0.5),2))*cos((M_PI*0.5)*c.dt);
+    return exp(-pow((x-c.Lx*0.5),2))*exp(-pow((y-c.Ly*0.5),2))*cos((M_PI*0.5)*c.dt);
   else{
     fprintf(stderr, "CHOIX FONCTION INVALID");
     exit(EXIT_FAILURE);
@@ -103,7 +103,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
 {
   MPI_Status Status;
 
-  int i0, i1, Nyloc, tag(10);
+  int i0, i1, Nyloc, tag(10), i, j;
 
   charge(me, i0, i1, c);
   Nyloc = (i1-i0+1)/c.Nx;
@@ -112,8 +112,8 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
   Eigen::VectorXd g1, g2;
   Eigen::VectorXd floc = Eigen::VectorXd::Zero(Nyloc*c.Nx);
 
-
   /*
+
   g1.resize(c.Nx);
   g2.resize(c.Nx);
 
@@ -178,8 +178,12 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
     }
   }*/
 
-
-
+ for (int k=i0; k<i1+1; k++)
+  {
+    indice(k, i, j, c);
+    floc(k-i0) = u(k-i0)/c.dt + f(i,j,c) + c.D*h(i,j,c)/(c.dx*c.dx); //u(k-i0)/c.dt +
+  }
+/*
   for (int j=0; j<Nyloc; j++) // Numérotation ligne par ligne donc j en première boucle
   {
     for (int i=0; i<c.Nx; i++)
@@ -187,30 +191,24 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
       // Rajoute des termes pour la matrice initiale gauche et droite
       if ((i==0) || (i==c.Nx-1))
       {
-        floc(i+j*c.Nx) = f(i+1,j+1,c) + c.D*h(i+1, j+1, c)/(c.dx*c.dx);
+        floc(i+j*c.Nx) = f(i,j,c) + c.D*h(i,j,c)/(c.dx*c.dx);
       }
       else
       {
-      floc(i+j*c.Nx) = f(i+1,j+1,c);
+        floc(i+j*c.Nx) = f(i,j,c);
       }
       // Rajoute des termes pour la matrice initiale haut et bas
       if (j==0)
       {
-        floc(i+j*c.Nx) += 0.;//g1(i);
+        floc(i+j*c.Nx) += g1(i);
       }
       else if (j==Nyloc-1)
       {
-        floc(i+j*c.Nx) += 0.;//g2(i);
+        floc(i+j*c.Nx) += g2(i);
       }
     }
-  }
-  for (int j=0; j<Nyloc; j++) // Numérotation ligne par ligne donc j en première boucle
-  {
-    for (int i=0; i<c.Nx; i++)
-    {
-      //std::cout<< "me" << me << "Voila f en " << f(i,j,c) << " pour " << j+i0 << " " << i  << " " << floc(i+j*c.Nx) <<std::endl;
-    }
-  }
+  }*/
+
   return floc;
 }
 
@@ -237,11 +235,11 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,E
 
   Z.resize(N);
 
-  while( (rk.squaredNorm() > tolerance) && (k <= kmax ))
+  while((rk.squaredNorm() > tolerance) && (k <= kmax ))
   {
     Z = A*p;
     a = (rk.dot(rk))/(Z.dot(p));
-    u += a*p;
+    u = u + a*p;
     rk1 = rk -a*Z;
     g =(rk1.dot(rk1))/(rk.dot(rk));
     p = rk1 +g*p;
@@ -250,9 +248,8 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,E
   }
   for(int k=0; k<N; k++)
   {
-
     indice(k, i, j, c);
-    std::cout << "Voila u pour me = " << me << " la valeur calculée " << u(k) << " la valeur attendue " << (i+1)*c.dx*(1-(i+1)*c.dx)*(j+1)*c.dy*(1-(j+1)*c.dy) << std::endl;
+    //std::cout << "Voila u pour me = " << me << " la valeur calculée " << u(k) << " la valeur attendue " << (i)*c.dx*(1-(i)*c.dx)*(j)*c.dy*(1-(j)*c.dy) << std::endl;
   }
 
 
