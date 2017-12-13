@@ -9,7 +9,7 @@ using namespace std;
 
 void parse_file(char* filename, config_t&c){
   ifstream file(filename);
-  
+
   string line;
   while(getline(file, line)){
     stringstream iss(line);

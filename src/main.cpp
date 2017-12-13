@@ -18,8 +18,8 @@ int main(int argc, char** argv){
     exit(0);
   }
   MPI_Init(NULL,NULL);
-  int rank, size;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  int me, size;
+  MPI_Comm_rank(MPI_COMM_WORLD, &me);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   /* Parsing config file */
   config_t c;
@@ -28,8 +28,39 @@ int main(int argc, char** argv){
   c.dx = c.Lx/(c.Nx+1);
   c.dy = c.Ly/(c.Ny+1);
   c.dt = 0.1;
-  
-  
+  int i0,i1,kmax,m,n,i,Nyloc;
+  double tolerance(1.E-6);
+  kmax =100;
+  charge(me,i0,i1,c);
+  //cout << "Je suis me "<< me << " et i0 et i1 valent " << i0 << " " << i1 << endl;
+  indice(i1, m, n, c);
+  //cout << m << "   " << n << endl;
+  Nyloc=(i1-i0+1)/c.Nx;
+  //
+  Eigen::VectorXd u = Eigen::VectorXd::Zero(c.Nx*Nyloc);
+
+  Eigen::VectorXd x0 = Eigen::VectorXd::Zero(c.Nx*Nyloc);
+
+  Eigen::MatrixXd Aloc = Eigen::MatrixXd::Zero(c.Nx*Nyloc,c.Nx*Nyloc);
+
+  Remplissage(Aloc,c.Nx,Nyloc,c);
+
+  //second_membre(me,u,c);
+
+
+  Gradientconjugue(Aloc,u,second_membre(me,c),x0 ,tolerance, kmax);
+
+
+  if (c.choix == 0)
+  {
+    for(int i=0; i<i1-i0+1; i++)
+    {
+      indice(i0+i, m, n, c);
+      //cout<< "test " << i0  << " " << i1 << " " << i << " " << " " << m << " "  << n <<  endl;
+      //cout << 2*( m*c.dx*(1-m*c.dx)*n*c.dy*(1-n*c.dy)) << endl;
+    }
+  }
+
   MPI_Finalize();
 
   return 0;
