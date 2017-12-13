@@ -106,6 +106,9 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
 
   Eigen::VectorXd g1, g2;
   Eigen::VectorXd floc = Eigen::VectorXd::Zero(Nyloc*c.Nx);
+
+
+  /*
   g1.resize(c.Nx);
   g2.resize(c.Nx);
 
@@ -168,7 +171,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
       g1(i) = c.D*rev2[i]/(c.dy*c.dy);
       g2(i) = c.D*rev1[i]/(c.dy*c.dy);
     }
-  }
+  }*/
 
 
 
@@ -188,11 +191,11 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
       // Rajoute des termes pour la matrice initiale haut et bas
       if (j==0)
       {
-        floc(i+j*c.Nx) += g1(i);
+        floc(i+j*c.Nx) += 0.;//g1(i);
       }
       else if (j==Nyloc-1)
       {
-        floc(i+j*c.Nx) += g2(i);
+        floc(i+j*c.Nx) += 0.;//g2(i);
       }
     }
   }
@@ -254,6 +257,7 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,E
   {
     std::cout << "tolérance non atteinte " << std::endl;
   }
+  MPI_Barrier(MPI_COMM_WORLD);
 }
 
 // Fonction vérifiée -> Elle fonctionne

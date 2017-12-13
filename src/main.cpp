@@ -47,11 +47,13 @@ int main(int argc, char** argv){
 
   //second_membre(me,u,c);
 
-  while(i<10)
+  while(i<100)
   {
     Gradientconjugue(Aloc,u,second_membre(me, u, c),x0 ,tolerance, kmax, c, me);
-    i++;
     MPI_Barrier(MPI_COMM_WORLD);
+    i++;
+    cout<<i<<endl;
+    fflush(stdout);
   }
 
 
