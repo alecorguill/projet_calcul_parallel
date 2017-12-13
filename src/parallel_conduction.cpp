@@ -259,13 +259,7 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,E
   {
     std::cout << "tolérance non atteinte " << std::endl;
   }
-  int output = open("output", O_WRONLY);
-  if (!output){
-    perror("open : fichier output\n");
-    MPI_Finalize();
-    exit(EXIT_FAILURE);
-  }
-  log_result(output,u);
+  log_result(c.output,u);
 }
 
 // Fonction vérifiée -> Elle fonctionne

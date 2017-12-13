@@ -40,6 +40,7 @@ int main(int argc, char** argv){
   c.dx = c.Lx/(c.Nx+1);
   c.dy = c.Ly/(c.Ny+1);
   c.dt = 0.1;
+  c.output = output;
   int i0,i1,kmax,m,n,i,Nyloc;
   double tolerance(1.E-6);
   kmax =100;

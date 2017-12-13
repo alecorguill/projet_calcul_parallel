@@ -14,6 +14,7 @@ typedef struct {
   double dx;
   double dy;
   double dt;
+  int output;
 } config_t;
 
 void parse_file(char* filename, config_t& c);
