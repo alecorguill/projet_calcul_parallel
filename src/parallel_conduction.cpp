@@ -7,6 +7,11 @@
 #include <stdlib.h>
 #include <Eigen>
 #include <mpi.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 double f(int i, int j, config_t& c){
   double x = i*c.dx;
@@ -245,6 +250,13 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd u, Eigen::VectorXd b,Ei
   {
     std::cout << "tolérance non atteinte " << std::endl;
   }
+  int output = open("output", O_WRONLY);
+  if (!output){
+    perror("open : fichier output\n");
+    MPI_Finalize();
+    exit(EXIT_FAILURE);
+  }
+  log_result(output,u);
 }
 
 // Fonction vérifiée -> Elle fonctionne

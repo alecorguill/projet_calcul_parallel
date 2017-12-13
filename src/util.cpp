@@ -2,8 +2,17 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
+#include <Eigen>
+#include <mpi.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 
 #include "util.hpp"
+
+#define LINESIZE 82
 
 using namespace std;
 
@@ -32,5 +41,18 @@ void parse_file(char* filename, config_t&c){
 	else if(key == "choix")
 	  c.choix = atoi(c_value);
       }
+  }
+}
+
+void log_result(int output, Eigen::VectorXd& u){
+  int rank;
+  off_t offset;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  //MPI_Comm_size(MPI_COMM_WORLD, &size);
+  int size =  u.size();
+  offset = LINESIZE * size * rank;
+  lseek(output,offset,SEEK_SET);
+  for(int i = 0; i<size; ++i){
+    dprintf(output, "%lf\n", u(i));
   }
 }

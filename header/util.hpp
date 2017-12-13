@@ -1,6 +1,8 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <Eigen>
+
 typedef struct {
   double Lx;
   double Ly;
@@ -15,5 +17,5 @@ typedef struct {
 } config_t;
 
 void parse_file(char* filename, config_t& c);
-
+void log_result(int output, Eigen::VectorXd& u);
 #endif
