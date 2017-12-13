@@ -66,7 +66,7 @@ int main(int argc, char** argv){
     i++;
     MPI_Barrier(MPI_COMM_WORLD);
   }
-
+  log_result(c.output,u);
 
   if (c.choix == 0)
   {

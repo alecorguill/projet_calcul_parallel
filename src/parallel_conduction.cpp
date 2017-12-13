@@ -259,7 +259,6 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,E
   {
     std::cout << "tolérance non atteinte " << std::endl;
   }
-  log_result(c.output,u);
 }
 
 // Fonction vérifiée -> Elle fonctionne
