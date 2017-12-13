@@ -29,11 +29,14 @@ int main(int argc, char** argv){
   c.dy = c.Ly/(c.Ny+1);
   c.dt = 0.1;
 
-  int i0,i1,kmax;
+  int i0,i1,kmax,m,n,i,Nyloc;
   double tolerance(1.E-6);
   kmax =100;
   charge(me,i0,i1,c);
-  int Nyloc(i1-i0+1);
+  //cout << "Je suis me "<< me << " et i0 et i1 valent " << i0 << " " << i1 << endl;
+  indice(i1, m, n, c);
+  //cout << m << "   " << n << endl;
+  Nyloc=(i1-i0+1)/c.Nx;
   //
   Eigen::VectorXd u = Eigen::VectorXd::Zero(c.Nx*Nyloc);
 
@@ -43,13 +46,23 @@ int main(int argc, char** argv){
 
   Remplissage(Aloc,c.Nx,Nyloc,c);
 
-  second_membre(me,u,c);
+  //second_membre(me,u,c);
 
-  //Gradientconjugue(Aloc,u,second_membre(me,u,c),x0 ,tolerance, kmax);
-  if (me ==0 )
-    cout << "bite4" << endl;
 
-  //
+  Gradientconjugue(Aloc,u,second_membre(me,c),x0 ,tolerance, kmax);
+
+
+  if (c.choix == 0)
+  {
+    for(int i=0; i<i1-i0+1; i++)
+    {
+      indice(i0+i, m, n, c);
+      //cout<< "test " << i0  << " " << i1 << " " << i << " " << " " << m << " "  << n <<  endl;
+      //cout << 2*( m*c.dx*(1-m*c.dx)*n*c.dy*(1-n*c.dy)) << endl;
+    }
+  }
+
+
 
 
   MPI_Finalize();

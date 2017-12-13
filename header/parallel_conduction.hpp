@@ -17,7 +17,7 @@ void indice(int k, int& i, int& j, config_t& c);
 /* renvoie le morceau de domaine en fonction du proc  */
 void charge(int me, int &i0, int &i1, config_t& c);
 
-Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c);
+Eigen::VectorXd second_membre(int me, config_t& c);
 
 void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd u, Eigen::VectorXd b,Eigen::VectorXd x0 ,double tolerance, int kmax);
 
