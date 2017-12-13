@@ -99,7 +99,7 @@ Eigen::VectorXd Remplissage_u(config_t& c)
 }
 
 
-Eigen::VectorXd second_membre(int me, config_t& c)
+Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
 {
   MPI_Status Status;
 
@@ -117,7 +117,7 @@ Eigen::VectorXd second_membre(int me, config_t& c)
   double env1[c.Nx];
   double env2[c.Nx];
 
-  /*if(me!=0)
+  if(me!=0)
   {
     for(int i=0; i<c.Nx; i++)
     {
@@ -139,7 +139,7 @@ Eigen::VectorXd second_membre(int me, config_t& c)
 
   // Envoie des informations des processeurs précédants le bord haut (env1) et le bas (env2)
 
-*/
+
 
   // Appel des vecteurs pour le bord haut (g1) et bas (g2) de la matrice initiale
   double rev1[c.Nx];
@@ -148,30 +148,30 @@ Eigen::VectorXd second_membre(int me, config_t& c)
   if (me==0)
   {
 
-    //MPI_Recv(rev1, c.Nx, MPI_DOUBLE, me+1, tag+2*(me+1), MPI_COMM_WORLD, &Status);
+    MPI_Recv(rev1, c.Nx, MPI_DOUBLE, me+1, tag+2*(me+1), MPI_COMM_WORLD, &Status);
     for(int i=0; i<c.Nx; i++)
     {
-      g1(i) = c.D*g(i, 0, c)/(c.dy*c.dy);
-      g2(i) = c.D/(c.dy*c.dy);
+      g1(i) = c.D*g(i+1, 1, c)/(c.dy*c.dy);
+      g2(i) = c.D*rev1[i]/(c.dy*c.dy);
     }
   }
   else if (me == c.np-1)
   {
-    //MPI_Recv(rev2, c.Nx, MPI_DOUBLE, me-1, tag+2*(me-1)+1, MPI_COMM_WORLD, &Status);
+    MPI_Recv(rev2, c.Nx, MPI_DOUBLE, me-1, tag+2*(me-1)+1, MPI_COMM_WORLD, &Status);
     for(int i=0; i<c.Nx; i++)
     {
-      g2(i) = c.D*g(i, c.np-1, c)/(c.dy*c.dy);
-      g1(i) = c.D/(c.dy*c.dy);
+      g2(i) = c.D*g(i+1, c.np, c)/(c.dy*c.dy);
+      g1(i) = c.D*rev2[i]/(c.dy*c.dy);
     }
   }
   else
   {
-    //MPI_Recv(rev1, c.Nx, MPI_DOUBLE, me+1, tag+2*(me+1), MPI_COMM_WORLD, &Status);
-    //MPI_Recv(rev2, c.Nx, MPI_DOUBLE, me-1, tag+2*(me-1)+1, MPI_COMM_WORLD, &Status);
+    MPI_Recv(rev1, c.Nx, MPI_DOUBLE, me+1, tag+2*(me+1), MPI_COMM_WORLD, &Status);
+    MPI_Recv(rev2, c.Nx, MPI_DOUBLE, me-1, tag+2*(me-1)+1, MPI_COMM_WORLD, &Status);
     for(int i=0; i<c.Nx; i++)
     {
-      g1(i) = c.D/(c.dy*c.dy);
-      g2(i) = c.D/(c.dy*c.dy);
+      g1(i) = c.D*rev2[i]/(c.dy*c.dy);
+      g2(i) = c.D*rev1[i]/(c.dy*c.dy);
     }
   }
 
@@ -184,11 +184,11 @@ Eigen::VectorXd second_membre(int me, config_t& c)
       // Rajoute des termes pour la matrice initiale gauche et droite
       if ((i==0) || (i==c.Nx-1))
       {
-        floc(i+j*c.Nx) = f(i,j,c) + c.D*h(i, j, c)/(c.dx*c.dx);
+        floc(i+j*c.Nx) = f(i+1,j+1,c) + c.D*h(i+1, j+1, c)/(c.dx*c.dx);
       }
       else
       {
-      floc(i+j*c.Nx) = f(i,j,c);
+      floc(i+j*c.Nx) = f(i+1,j+1,c);
       }
       // Rajoute des termes pour la matrice initiale haut et bas
       if (j==0)
@@ -211,9 +211,10 @@ Eigen::VectorXd second_membre(int me, config_t& c)
   return floc;
 }
 
-void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd u, Eigen::VectorXd b,Eigen::VectorXd x0 ,double tolerance, int kmax)
+void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,Eigen::VectorXd x0 ,double tolerance, int kmax, config_t& c, int me)
 {
   int N(0);
+  int i, j;
   N=x0.size();
   Eigen::VectorXd Z;
   Eigen::VectorXd rk;
@@ -244,7 +245,15 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd u, Eigen::VectorXd b,Ei
     rk=rk1;
     k++;
   }
-  //std::cout << u <<std::endl;
+  for(int k=0; k<N; k++)
+  {
+
+    indice(k, i, j, c);
+    std::cout << "Voila u pour me = " << me << " la valeur calculée " << u(k) << " la valeur attendue " << (i+1)*c.dx*(1-(i+1)*c.dx)*(j+1)*c.dy*(1-(j+1)*c.dy) << std::endl;
+  }
+
+
+
   // il faut retourner x c'est donc pas un Void !!!!!!!!!!!!!!!!
   if(k > kmax)
   {
