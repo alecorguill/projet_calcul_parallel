@@ -48,8 +48,12 @@ int main(int argc, char** argv){
 
   //second_membre(me,u,c);
 
-
-  Gradientconjugue(Aloc,u,second_membre(me,c),x0 ,tolerance, kmax);
+  while(i<10)
+  {
+    Gradientconjugue(Aloc,u,second_membre(me, u, c),x0 ,tolerance, kmax, c, me);
+    i++;
+    MPI_Barrier(MPI_COMM_WORLD);
+  }
 
 
   if (c.choix == 0)
