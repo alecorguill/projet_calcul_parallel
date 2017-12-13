@@ -25,9 +25,8 @@ void parse_file(char* filename, config_t&c){
 	  c.Ly = atof(c_value);
 	else if(key == "D")
 	  c.D = atof(c_value);
-	else if(key == "Nx"){
+	else if(key == "Nx")
 	  c.Nx = atoi(c_value);
-	}
 	else if(key == "Ny")
 	  c.Ny = atoi(c_value);
 	else if(key == "choix")

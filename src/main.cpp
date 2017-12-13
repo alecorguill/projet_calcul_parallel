@@ -29,6 +29,7 @@ int main(int argc, char** argv){
   c.dy = c.Ly/(c.Ny+1);
   c.dt = 0.1;
   
+  
   MPI_Finalize();
 
   return 0;
