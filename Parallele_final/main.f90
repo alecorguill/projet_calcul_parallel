@@ -42,29 +42,29 @@ PROGRAM projetpara
   t2 = MPI_WTIME()
   print*,"Pour ",Np,"processeurs,le temps de calcul est le suivant",t2-t1,"s"
 
-
+	print*, sol
   ! Ecriture dans un fichier solution
-  call rename(me,name)
-  open(5,file = name)
+  !call rename(me,name)
+  !open(5,file = name)
 
-  IF (choix == 2) Then 
-     Do  k=i1, iN
-        Call Indice(k, nx, ny, i, j)
-        write(5,*) sol(k), sin(i*dx) + cos(j*dy), sol(k) - sin(i*dx) - cos(j*dy)
-     end do
-  Else If (choix == 3) Then 
-     Do  k=i1, iN
-        Call Indice(k, nx, ny, i, j)
-        write(5,*) sol(k)
-     end do
-  Else
-     do k=i1, iN
-        Call Indice(k, nx, ny, i, j)
-        write(5,*) sol(k), i*dx*(1-i*dx)*j*dy*(1-j*dy), sol(k) -  i*dx*(1-i*dx)*j*dy*(1-j*dy)
-     end do
-  End if
+  !IF (choix == 2) Then 
+   !  Do  k=i1, iN
+    !    Call Indice(k, nx, ny, i, j)
+    !    write(5,*) sol(k), sin(i*dx) + cos(j*dy), sol(k) - sin(i*dx) - cos(j*dy)
+    ! end do
+ ! Else If (choix == 3) Then 
+  !   Do  k=i1, iN
+   !     Call Indice(k, nx, ny, i, j)
+    !!    write(5,*) sol(k)
+    ! end do
+  !Else
+   !  do k=i1, iN
+    !    Call Indice(k, nx, ny, i, j)
+     !   write(5,*) sol(k), i*dx*(1-i*dx)*j*dy*(1-j*dy), sol(k) -  i*dx*(1-i*dx)*j*dy*(1-j*dy)
+    ! end do
+  !End if
 
-  close(5)
+  !close(5)
   deallocate(sol)
   CALL MPI_FINALIZE(statinfo)
 

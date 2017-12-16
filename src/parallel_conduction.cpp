@@ -112,7 +112,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
   Eigen::VectorXd g1, g2;
   Eigen::VectorXd floc = Eigen::VectorXd::Zero(Nyloc*c.Nx);
 
-  /*
+
 
   g1.resize(c.Nx);
   g2.resize(c.Nx);
@@ -125,6 +125,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
     for(int i=0; i<c.Nx; i++)
     {
       env1[i] = u(i);
+      //std::cout << "env1" << env1[i] << std::endl;
     }
     MPI_Send(env1, c.Nx, MPI_DOUBLE, me-1, tag+2*me, MPI_COMM_WORLD);
   }
@@ -134,7 +135,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
     for(int i=0; i<c.Nx; i++)
     {
       env2[i] = u(i+c.Nx*(Nyloc-1));
-      std::cout<<"Je suis env"<<env2[i]<<std::endl;
+      //std::cout << "env2" << env2[i] << std::endl;
     }
     MPI_Send(env2, c.Nx, MPI_DOUBLE, me+1, tag+2*me+1, MPI_COMM_WORLD);
 
@@ -165,6 +166,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
     {
       g2(i) = c.D*g(i+1, c.np, c)/(c.dy*c.dy);
       g1(i) = c.D*rev2[i]/(c.dy*c.dy);
+      //std::cout << g1(i)<<std::endl;
     }
   }
   else
@@ -176,91 +178,81 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
       g1(i) = c.D*rev2[i]/(c.dy*c.dy);
       g2(i) = c.D*rev1[i]/(c.dy*c.dy);
     }
-  }*/
-
- for (int k=i0; k<i1+1; k++)
+  }
+  //std::cout<< " je suis me " << me << " i0"<< i0<<" "<< g1 << std::endl;
+/*
+ for (int k=i0; k<i1+1; k++) //pour avec 1 proc
   {
     indice(k, i, j, c);
-    floc(k-i0) = u(k-i0)/c.dt + f(i,j,c) + c.D*h(i,j,c)/(c.dx*c.dx); //u(k-i0)/c.dt +
+    floc(k-i0) = u(k-i0)/c.dt + f(i,j,c) + c.D*h(i,j,c)/(c.dx*c.dx);
+    std::cout<<"Je suis f"<<f(i,j,c)<<std::endl;//u(k-i0)/c.dt +
   }
-/*
-  for (int j=0; j<Nyloc; j++) // Numérotation ligne par ligne donc j en première boucle
-  {
-    for (int i=0; i<c.Nx; i++)
-    {
+
+*/
+for (int k=i0; k<i1+1; k++) //pour avec 1 proc
+ {
+      indice(k, i, j, c);
+      //std::cout<< "me"<< me << "couple i , j "<< i << " "<<j << std::endl;
       // Rajoute des termes pour la matrice initiale gauche et droite
       if ((i==0) || (i==c.Nx-1))
       {
-        floc(i+j*c.Nx) = f(i,j,c) + c.D*h(i,j,c)/(c.dx*c.dx);
+        floc(k-i0) = u(k-i0)/c.dt + f(i,j,c) + c.D*h(i,j,c)/(c.dx*c.dx);
+        //std::cout<<"mon me"<< me <<"mon couple i j" << i <<"   "<< j << "  "<<f(i,j,c) << std::endl;
       }
       else
       {
-        floc(i+j*c.Nx) = f(i,j,c);
+        floc(k-i0) = u(k-i0)/c.dt + f(i,j,c);
+        //std::cout<<"mon me"<< me <<"mon couple i j" << i <<"   "<< j << "  "<<f(i,j,c) << std::endl;
       }
       // Rajoute des termes pour la matrice initiale haut et bas
-      if (j==0)
+      if ((j==i0/c.Nx) && (me!=0))
       {
-        floc(i+j*c.Nx) += g1(i);
+        //std::cout << "avatn" << floc(k-i0) << "g " << g1 << std::endl;
+        floc(k-i0) += g1(i);
+        //std::cout << "après" << floc(k-i0)<< std::endl;
+
       }
-      else if (j==Nyloc-1)
+      else if ((j==i1/c.Nx) && (me!=c.np-1))
       {
-        floc(i+j*c.Nx) += g2(i);
+        floc(k-i0) += g2(i);
       }
-    }
-  }*/
+
+  }
 
   return floc;
 }
 
 void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,Eigen::VectorXd x0 ,double tolerance, int kmax, config_t& c, int me)
-{
-  int N(0);
-  int i, j;
-  N=x0.size();
-  Eigen::VectorXd Z;
-  Eigen::VectorXd rk;
-  Eigen::VectorXd p;
-  Eigen::VectorXd rk1; //rk1=rk+1
-
-
-  int k(0);
-  double a(0);
-  double g(0);
-
-  rk.resize(N);
-  rk1.resize(N);
-  p.resize(N);
-  rk=b-A*x0;
-  p=rk;
-
-  Z.resize(N);
-
-  while((rk.squaredNorm() > tolerance) && (k <= kmax ))
   {
-    Z = A*p;
-    a = (rk.dot(rk))/(Z.dot(p));
-    u = u + a*p;
-    rk1 = rk -a*Z;
-    g =(rk1.dot(rk1))/(rk.dot(rk));
-    p = rk1 +g*p;
-    rk=rk1;
-    k++;
-  }
-  for(int k=0; k<N; k++)
-  {
-    indice(k, i, j, c);
-    //std::cout << "Voila u pour me = " << me << " la valeur calculée " << u(k) << " la valeur attendue " << (i)*c.dx*(1-(i)*c.dx)*(j)*c.dy*(1-(j)*c.dy) << std::endl;
-  }
+    int _k(0), itemax(150);
+    Eigen::VectorXd rk(A.rows()), rk1(A.rows()), z(A.rows()), p(A.rows());
+    double alpha;
+    double beta = rk.norm();
+    double gamma;
+    rk = b;
+    p = rk;
+    beta = rk.norm();
+    for(int i=0; i<A.rows(); i++)
+    {
+      rk1(i)=0.;
+      u(i)=0.;
+    }
 
+    while ((beta > 0.001) && (_k < itemax))
+    {
+      z = A*p;
+      alpha = (rk.dot(rk))/(z.dot(p));
+      u = u + alpha*p;
+      rk1 = rk - alpha*z;
+      gamma = (rk1.dot(rk1))/(rk.dot(rk));
+      p = rk1 + gamma*p;
+      beta = rk.norm();
+      rk=rk1;
+      _k = _k + 1;
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
 
-
-  // il faut retourner x c'est donc pas un Void !!!!!!!!!!!!!!!!
-  if(k > kmax)
-  {
-    std::cout << "tolérance non atteinte " << std::endl;
   }
-  MPI_Barrier(MPI_COMM_WORLD);
-}
 
 // Fonction vérifiée -> Elle fonctionne
 void Remplissage(Eigen::MatrixXd& A, int Nx, int Ny, config_t& c)

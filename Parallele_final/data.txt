@@ -1,5 +1,5 @@
-1000 1000 # Nx et Ny 
+4 4 # Nx et Ny 
 1. 1.     # Lx et Ly 
-1000.     # dt 
+10     # dt 
 1.        # D
-1         # le choix, 1 pour le stationnaire, 2 pour le stationnaire périodique et 3 pour l'instationnaire
+2         # le choix, 1 pour le stationnaire, 2 pour le stationnaire périodique et 3 pour l'instationnaire
