@@ -1,8 +1,7 @@
 # Projet calcul parallèle
 ## Compilation
-
-     make parallel
-     make parallel_bc #pour la version bloc
+   
+   make   
 
 ## Exécution
 Le programme s'appuie sur un fichier de configuration nommé config.cfg. <br>
