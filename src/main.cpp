@@ -61,7 +61,7 @@ int main(int argc, char** argv){
   //cout << Aloc << endl;
   //second_membre(me,u,c);
   i=0;
-  while(i<5000)
+  while(i<1)
   {
     w =second_membre(me, u, c);
     cout<< "Voila la conv : " << convloc;

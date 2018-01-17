@@ -153,7 +153,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
       MPI_Recv(rev1, c.Nx, MPI_DOUBLE, me+1, tag+2*(me+1), MPI_COMM_WORLD, &Status);
       for(int i=0; i<c.Nx; i++)
       {
-        g1(i) = c.D*g(i+1, 1, c)/(c.dy*c.dy);
+        g1(i) = c.D*g(i, 0, c)/(c.dy*c.dy);
         g2(i) = c.D*rev1[i]/(c.dy*c.dy);
       }
     }
@@ -162,7 +162,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
       MPI_Recv(rev2, c.Nx, MPI_DOUBLE, me-1, tag+2*(me-1)+1, MPI_COMM_WORLD, &Status);
       for(int i=0; i<c.Nx; i++)
       {
-        g2(i) = c.D*g(i+1, c.np, c)/(c.dy*c.dy);
+        g2(i) = c.D*g(i, c.Nx-1, c)/(c.dy*c.dy);
         g1(i) = c.D*rev2[i]/(c.dy*c.dy);
         //std::cout << g1(i)<<std::endl;
       }
@@ -191,6 +191,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
 for (int k=i0; k<i1+1; k++) //pour avec 1 proc
 {
   indice(k, i, j, c);
+  std::cout<<"JE suis me = "<< me << "voila i : "<<i<<" et j : "<<j<<std::endl;
   //std::cout<< "me"<< me << "couple i , j "<< i << " "<<j << std::endl;
   // Rajoute des termes pour la matrice initiale gauche et droite
   if ((i==0) || (i==c.Nx-1))
@@ -204,19 +205,19 @@ for (int k=i0; k<i1+1; k++) //pour avec 1 proc
     //std::cout<<"mon me"<< me <<"mon couple i j" << i <<"   "<< j << "  "<<f(i,j,c) << std::endl;
   }
   // Rajoute des termes pour la matrice initiale haut et bas
-  if ((j==i0/c.Nx) && (me!=0))
+  if (j==0)
   {
     //std::cout << "avatn" << floc(k-i0) << "g " << g1 << std::endl;
-    floc(k-i0) += g1(i);
+    floc(k-i0) = floc(k-i0) + g1(i);
     //std::cout << "après" << floc(k-i0)<< std::endl;
-
   }
-  else if ((j==i1/c.Nx) && (me!=c.np-1))
+  if (j==Nyloc-1)
   {
-    floc(k-i0) += g2(i);
+    floc(k-i0) = floc(k-i0) + g2(i);
   }
 
 }
+
 
 return floc;
 }
