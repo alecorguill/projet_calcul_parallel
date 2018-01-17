@@ -93,11 +93,6 @@ void charge(int me, int &i0, int &i1, config_t& c){
   }
 }
 
-Eigen::VectorXd Remplissage_u(config_t& c)
-{
-
-}
-
 
 Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
 {
@@ -217,10 +212,27 @@ for (int k=i0; k<i1+1; k++) //pour avec 1 proc
         floc(k-i0) += g2(i);
       }
 
+    }
+
+    return floc;
   }
 
-  return floc;
-}
+  int Convergence(Eigen::VectorXd utemp, Eigen::VectorXd u, double e)
+  {
+    int i, N;
+    N = u.size();
+    std::cout<<"Je suis N :"<< N << std::endl;
+    for(int i=0; i<N; i++)
+    {
+      //std::cout<< u(i) << "  " << utemp(i) << "  " <<fabs(u(i)-utemp(i))<<std::endl;
+      if ((fabs(u(i)-utemp(i)))>e)
+      {
+        //std::cout<<"Je suis rentré ici :"<<std::endl;
+        return 1;
+      }
+    }
+    return 0;
+  }
 
 void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,Eigen::VectorXd x0 ,double tolerance, int kmax, config_t& c, int me)
   {

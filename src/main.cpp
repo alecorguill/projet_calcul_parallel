@@ -41,7 +41,7 @@ int main(int argc, char** argv){
   c.dy = c.Ly/(c.Ny-1);
   c.dt = 10;
   c.output = output;
-  int i0,i1,kmax,m,n,i,Nyloc;
+  int i0,i1,kmax,m,n,i,Nyloc,convloc, conv;
   double tolerance(1.E-6);
   kmax =10000;
   charge(me,i0,i1,c);
@@ -50,28 +50,34 @@ int main(int argc, char** argv){
   //cout << m << "   " << n << endl;
   Nyloc=(i1-i0+1)/c.Nx;
   //
+
   Eigen::VectorXd u = Eigen::VectorXd::Zero(c.Nx*Nyloc);
-
+  Eigen::VectorXd utemp = Eigen::VectorXd::Zero(c.Nx*Nyloc);
   Eigen::VectorXd w = Eigen::VectorXd::Zero(c.Nx*Nyloc);
-
   Eigen::VectorXd x0 = Eigen::VectorXd::Zero(c.Nx*Nyloc);
-
   Eigen::MatrixXd Aloc = Eigen::MatrixXd::Zero(c.Nx*Nyloc,c.Nx*Nyloc);
 
   Remplissage(Aloc,c.Nx,Nyloc,c);
   //cout << Aloc << endl;
   //second_membre(me,u,c);
-  while(i<100)
+  i=0;
+  while((i<1000) && (conv!=0))
   {
     w =second_membre(me, u, c);
-    cout<<i<<endl;
+    cout<< "Voila la conv : " << convloc;
+    utemp = u;
     Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
-    //cout << u << endl;
+    //cout << "Voila utemp :" <<utemp;
+    //cout << "Voila u : " << u;
+    convloc = Convergence(utemp, u, tolerance);
+    cout<< "Voila la convloc : " << convloc;
+    MPI_Allreduce(&convloc, &conv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     i++;
     //cout<<i<<endl;
     //fflush(stdout);
   }
+  cout<<"Je suis sorti avec tant d'itérations : " <<i<<endl;
 
   log_result(c.output,u);
 
