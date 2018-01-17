@@ -108,7 +108,8 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
   Eigen::VectorXd floc = Eigen::VectorXd::Zero(Nyloc*c.Nx);
 
 
-
+  if(c.np!=1)
+  {
   g1.resize(c.Nx);
   g2.resize(c.Nx);
 
@@ -174,6 +175,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
       g2(i) = c.D*rev1[i]/(c.dy*c.dy);
     }
   }
+}
   //std::cout<< " je suis me " << me << " i0"<< i0<<" "<< g1 << std::endl;
 /*
  for (int k=i0; k<i1+1; k++) //pour avec 1 proc
