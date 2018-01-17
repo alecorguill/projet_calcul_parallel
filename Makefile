@@ -23,10 +23,16 @@ $(PROG):$(OBJ) $(MAIN)
 %.o: %.cpp %.hpp
 	$(CC) $(CPP_FLAGS) $(HEADER_FLAGS) -c $< -o $@
 
+%.o: %.cpp
+	$(CC) $(CPP_FLAGS) $(HEADER_FLAGS) -c $< -o $@
+
 test: test_unitaire
 
 test_unitaire : $(OBJ) test_unitaire.o
 	$(CC) $(CPP_FLAGS) $(HEADER_FLAGS) -o $@ $^ $(LDFLAGS)
 
+speedup :
+	./script.sh
+	python plot_csv.py
 clean:
-	rm -f *.o *~ $(PROG)
+	rm -f *.o *~ $(PROG) output test_unitaire *.csv

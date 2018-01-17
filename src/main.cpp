@@ -64,7 +64,6 @@ int main(int argc, char** argv){
   while(i<100)
   {
     w =second_membre(me, u, c);
-    cout<<i<<endl;
     Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
     //cout << u << endl;
     MPI_Barrier(MPI_COMM_WORLD);
