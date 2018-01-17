@@ -1,7 +1,7 @@
 # Projet calcul parallèle
 ## Compilation
    
-   make   
+	make   
 
 ## Exécution
 Le programme s'appuie sur un fichier de configuration nommé config.cfg. <br>
