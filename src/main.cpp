@@ -68,7 +68,9 @@ int main(int argc, char** argv){
     //cout<<"Je suis me "<<me << " voilà x0 : " << x0 << endl;
     //cout<< "Voila la conv : " << convloc;
     utemp = u;
-    Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
+    //Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
+    BIGradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
+
     //cout << "Voila utemp :" <<utemp;
     //cout << "Je suis me 2 : " << me << " et voila u : " << u << endl;
     convloc = Convergence(utemp, u, tolerance);
@@ -76,7 +78,7 @@ int main(int argc, char** argv){
     MPI_Allreduce(&convloc, &conv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     i++;
-    //cout<<i<<endl;
+    // cout<<i<<endl;
     //fflush(stdout);
   }
   cout<<"Je suis sorti avec tant d'itérations : " <<i<<endl;
