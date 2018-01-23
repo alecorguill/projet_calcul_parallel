@@ -124,7 +124,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
     {
       for(int i=0; i<c.Nx; i++)
       {
-        env1[i] = u(i);
+        env1[i] = u(i);//0.5*u(i) + 0.5*(u(i)-u(i+c.Nx))/c.dy;
         // alpha u(i) - beta u(i+c.Nx)
         //std::cout << "env1" << env1[i] << std::endl;
       }
@@ -135,7 +135,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
     {
       for(int i=0; i<c.Nx; i++)
       {
-        env2[i] = u(i+c.Nx*(Nyloc-1));
+        env2[i] = u(i+c.Nx*(Nyloc-1));//0.5*u(i+c.Nx*(Nyloc-1)) + 0.5*(u(i+c.Nx*(Nyloc-1))- u(i+c.Nx*(Nyloc-1)-c.Nx))/c.dy;
         // alpha u(i+c.Nx*(Nyloc-1)) - beta u(i+c.Nx*(Nyloc-1)-c.Nx)
 
         //std::cout << "env2" << env2[i] << std::endl;
