@@ -59,17 +59,16 @@ int main(int argc, char** argv){
   Eigen::MatrixXd Aloc = Eigen::MatrixXd::Zero(c.Nx*Nyloc,c.Nx*Nyloc);
 
   Remplissage(Aloc,c.Nx,Nyloc,c);
+
   //cout << Aloc << endl;
   //second_membre(me,u,c);
-  while(i<100)
+  while(i<1000)
   {
     w =second_membre(me, u, c);
-    cout<<i<<endl;
-    Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
-    //cout << u << endl;
+    BIGradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
     MPI_Barrier(MPI_COMM_WORLD);
     i++;
-    //cout<<i<<endl;
+    cout<<i<<endl;
     //fflush(stdout);
   }
 

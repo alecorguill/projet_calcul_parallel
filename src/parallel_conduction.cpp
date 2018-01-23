@@ -256,6 +256,43 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,E
 
   }
 
+  void BIGradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,Eigen::VectorXd x0 ,double tolerance, int kmax, config_t& c, int me)
+    {
+      int _k(0), itemax(150);
+      Eigen::VectorXd rk(A.rows()), rk1(A.rows()), z(A.rows()), p(A.rows()),s(A.rows()),z2(A.rows());
+      double alpha,w,bet;
+      double beta = rk.norm();
+      double gamma;
+      rk = b;
+      p = rk;
+      beta = rk.norm();
+      for(int i=0; i<A.rows(); i++)
+      {
+        rk1(i)=0.;
+        u(i)=0.;
+      }
+
+      while ((beta > 0.000001) && (_k < itemax))
+      {
+        z = A*p;
+        alpha = (rk.dot(b))/(z.dot(b));
+        s=rk-alpha*z;
+        z2= A*s;
+        w=(z2.dot(s)/(z2.dot(z2)));
+        u = u + alpha*p+w*s;
+        rk1 = s - w*z2;
+
+        bet=(alpha/w)*(rk1.dot(b)/(rk.dot(b)));
+        p=rk1+bet*(p-w*z);
+        beta = rk.norm();
+        rk=rk1;
+        _k = _k + 1;
+      }
+      MPI_Barrier(MPI_COMM_WORLD);
+
+    }
+
+
 // Fonction vérifiée -> Elle fonctionne
 void Remplissage(Eigen::MatrixXd& A, int Nx, int Ny, config_t& c)
 {
