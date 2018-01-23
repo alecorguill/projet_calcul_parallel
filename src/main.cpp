@@ -49,6 +49,7 @@ int main(int argc, char** argv){
   indice(i1, m, n, c);
   //cout << m << "   " << n << endl;
   Nyloc=(i1-i0+1)/c.Nx;
+  conv =1;
   //
 
   Eigen::VectorXd u = Eigen::VectorXd::Zero(c.Nx*Nyloc);
@@ -58,19 +59,20 @@ int main(int argc, char** argv){
   Eigen::MatrixXd Aloc = Eigen::MatrixXd::Zero(c.Nx*Nyloc,c.Nx*Nyloc);
 
   Remplissage(Aloc,c.Nx,Nyloc,c);
-  //cout << Aloc << endl;
+  //cout << "Je suis me : " << me << " et voilà Aloc : "<<Aloc << endl;
   //second_membre(me,u,c);
   i=0;
-  while(i<1)
+  while((i<10000) && (conv!=0))
   {
     w =second_membre(me, u, c);
-    cout<< "Voila la conv : " << convloc;
+    //cout<<"Je suis me "<<me << " voilà x0 : " << x0 << endl;
+    //cout<< "Voila la conv : " << convloc;
     utemp = u;
     Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
     //cout << "Voila utemp :" <<utemp;
-    //cout << "Voila u : " << u;
+    //cout << "Je suis me 2 : " << me << " et voila u : " << u << endl;
     convloc = Convergence(utemp, u, tolerance);
-    cout<< "Voila la convloc : " << convloc;
+    //cout<< "Voila la convloc : " << convloc;
     MPI_Allreduce(&convloc, &conv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     i++;

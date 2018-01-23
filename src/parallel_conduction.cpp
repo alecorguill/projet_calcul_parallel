@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include "float.h"
 #include <fcntl.h>
 
 
@@ -102,7 +103,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
 
   charge(me, i0, i1, c);
 
-  std::cout<<"je suis le proc me = "<< me << " et mon i0 est : "<<i0<< " et i1 est : "<<i1 <<std::endl;
+  //std::cout<<"je suis le proc me = "<< me << " et mon i0 est : "<<i0<< " et i1 est : "<<i1 <<std::endl;
   Nyloc = (i1-i0+1)/c.Nx;
   //std::cout<<"je suis le proc me = "<< me << " et mon i0 est : "<<i0<< " et i1 est : "<<i1 << " et voila Nyloc " << Nyloc<<std::endl;
   //std::cout<<"Voila la valeur de Nyloc " <<Nyloc<<"pour me = "<< me <<std::endl;
@@ -162,7 +163,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
       MPI_Recv(rev2, c.Nx, MPI_DOUBLE, me-1, tag+2*(me-1)+1, MPI_COMM_WORLD, &Status);
       for(int i=0; i<c.Nx; i++)
       {
-        g2(i) = c.D*g(i, c.Nx-1, c)/(c.dy*c.dy);
+        g2(i) = c.D*g(i, c.Ny-1, c)/(c.dy*c.dy);
         g1(i) = c.D*rev2[i]/(c.dy*c.dy);
         //std::cout << g1(i)<<std::endl;
       }
@@ -178,6 +179,7 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
       }
     }
   }
+  MPI_Barrier(MPI_COMM_WORLD);
   //std::cout<< " je suis me " << me << " i0"<< i0<<" "<< g1 << std::endl;
   /*
   for (int k=i0; k<i1+1; k++) //pour avec 1 proc
@@ -188,10 +190,15 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
 }
 
 */
+
+//std::cout<<"JE suis me = "<< me << " voila i0 " << i0 << " voila i1 "<< i1 << std::endl;
 for (int k=i0; k<i1+1; k++) //pour avec 1 proc
 {
+  i=0;
+  j=0;
   indice(k, i, j, c);
-  std::cout<<"JE suis me = "<< me << "voila i : "<<i<<" et j : "<<j<<std::endl;
+  //std::cout<<" Je suis me " <<me <<" mon couple i j" << i <<"   "<< j <<std::endl;
+  //std::cout<<"JE suis me = "<< me << " voila k "<< k << " voila i : "<<i<<" et j : "<<j<<std::endl;
   //std::cout<< "me"<< me << "couple i , j "<< i << " "<<j << std::endl;
   // Rajoute des termes pour la matrice initiale gauche et droite
   if ((i==0) || (i==c.Nx-1))
@@ -205,20 +212,23 @@ for (int k=i0; k<i1+1; k++) //pour avec 1 proc
     //std::cout<<"mon me"<< me <<"mon couple i j" << i <<"   "<< j << "  "<<f(i,j,c) << std::endl;
   }
   // Rajoute des termes pour la matrice initiale haut et bas
-  if (j==0)
+  if (j==i0/c.Nx)
   {
     //std::cout << "avatn" << floc(k-i0) << "g " << g1 << std::endl;
     floc(k-i0) = floc(k-i0) + g1(i);
     //std::cout << "après" << floc(k-i0)<< std::endl;
   }
-  if (j==Nyloc-1)
+  if (j==((i1+1)/c.Nx) - 1)
   {
+    //std::cout<<"Je suis me "<<me<<" et je suis rentré pour j=0 et voila g2 " << g2(i)<<std::endl;
+
     floc(k-i0) = floc(k-i0) + g2(i);
   }
 
+  //std::cout<<"Je suis k et voila ma valeur : "<<k<< " et mon floc : "<<floc(k-i0) << std::endl;
+  //std::cout<<"Je suis me "<<me <<" et voila floc pour i,j "<<i << "   "<<j<< "   " << floc(k-i0) <<std::endl;
+
 }
-
-
 return floc;
 }
 
@@ -226,7 +236,7 @@ int Convergence(Eigen::VectorXd utemp, Eigen::VectorXd u, double e)
 {
   int i, N;
   N = u.size();
-  std::cout<<"Je suis N :"<< N << std::endl;
+  //std::cout<<"Je suis N :"<< N << std::endl;
   for(int i=0; i<N; i++)
   {
     //std::cout<< u(i) << "  " << utemp(i) << "  " <<fabs(u(i)-utemp(i))<<std::endl;
@@ -241,12 +251,12 @@ int Convergence(Eigen::VectorXd utemp, Eigen::VectorXd u, double e)
 
 void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,Eigen::VectorXd x0 ,double tolerance, int kmax, config_t& c, int me)
 {
-  int _k(0), itemax(150);
+  int _k(0), itemax(250);
   Eigen::VectorXd rk(A.rows()), rk1(A.rows()), z(A.rows()), p(A.rows());
   double alpha;
-  double beta = rk.norm();
   double gamma;
   rk = b;
+  double beta = rk.norm();
   p = rk;
   beta = rk.norm();
   for(int i=0; i<A.rows(); i++)
@@ -255,20 +265,21 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,E
     u(i)=0.;
   }
 
-  while ((beta > 0.001) && (_k < itemax))
+  while (/*(beta > 0.001) && */(_k < itemax))
   {
     z = A*p;
-    alpha = (rk.dot(rk))/(z.dot(p));
+    alpha = (rk.dot(rk))/(z.dot(p)+DBL_EPSILON);
     u = u + alpha*p;
     rk1 = rk - alpha*z;
-    gamma = (rk1.dot(rk1))/(rk.dot(rk));
+    gamma = (rk1.dot(rk1))/(rk.dot(rk)+DBL_EPSILON);
     p = rk1 + gamma*p;
     beta = rk.norm();
     rk=rk1;
     _k = _k + 1;
+    //std::cout<< "Je suis me " << me << " et je suis passé" <<std::endl;
   }
   MPI_Barrier(MPI_COMM_WORLD);
-
+  //std::cout<<" Je suis me " << me << " et voilà mon u : "<< u <<std::endl;
 }
 
 // Fonction vérifiée -> Elle fonctionne
