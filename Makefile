@@ -31,7 +31,7 @@ test: test_unitaire
 test_unitaire : $(OBJ) test_unitaire.o
 	$(CC) $(CPP_FLAGS) $(HEADER_FLAGS) -o $@ $^ $(LDFLAGS)
 
-speedup :
+courbe :
 	./script.sh
 	python plot_csv.py
 clean:

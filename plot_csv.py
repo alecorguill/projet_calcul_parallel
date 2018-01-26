@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import csv
-
+import copy
 
 def extract_csv(filename, save=False):
     # Extracting
@@ -16,14 +16,22 @@ def extract_csv(filename, save=False):
     return (sizes,rows)
     
 if __name__ == "__main__":
-    speedup = extract_csv("speedup.csv");
     plt.figure(1)
     plt.subplot(111)
+    speedup = extract_csv("speedup.csv");
     save = speedup[1][0]
+    eff = [x[:] for x in speedup]
+    xy = [[],[]]
     for i in range(len(speedup[0])):
         speedup[1][i] = save/float(speedup[1][i])
-    # aos = plt.plot(aos[0], aos[1], 'b', label='aos-avx512')
-    speedup = plt.plot(speedup[0], speedup[1], 'g', label='speedup')
+        eff[1][i] = speedup[1][i]/float(eff[0][i])
+    for i in range(1,len(speedup[0])+1):
+        xy[0].append(i)
+        xy[1].append(i)
+
+    plt.plot(xy[0],xy[1],'r')
+    plt.plot(eff[0], eff[1], 'b', label='efficiency')
+    plt.plot(speedup[0], speedup[1], 'g', label='speedup')
     plt.legend(loc=1, bbox_to_anchor=(1,0.87))
 
     plt.xlabel('nombre de processus')
