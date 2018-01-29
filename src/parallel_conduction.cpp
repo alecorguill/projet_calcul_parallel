@@ -124,8 +124,8 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
     {
       for(int i=0; i<c.Nx; i++)
       {
-        env1[i] = u(i);//0.5*u(i) + 0.5*(u(i)-u(i+c.Nx))/c.dy;
-        // alpha u(i) - beta u(i+c.Nx)
+        env1[i] = u(i);//0.8*u(i) + 0.55*(-u(i)+u(i+c.Nx))/c.dy;//u(i);//0.5*u(i) + 0.5*(u(i)-u(i+c.Nx))/c.dy;
+        // alpha u(i) + beta u(i+c.Nx)
         //std::cout << "env1" << env1[i] << std::endl;
       }
       MPI_Send(env1, c.Nx, MPI_DOUBLE, me-1, tag+2*me, MPI_COMM_WORLD);
@@ -135,8 +135,8 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
     {
       for(int i=0; i<c.Nx; i++)
       {
-        env2[i] = u(i+c.Nx*(Nyloc-1));//0.5*u(i+c.Nx*(Nyloc-1)) + 0.5*(u(i+c.Nx*(Nyloc-1))- u(i+c.Nx*(Nyloc-1)-c.Nx))/c.dy;
-        // alpha u(i+c.Nx*(Nyloc-1)) - beta u(i+c.Nx*(Nyloc-1)-c.Nx)
+        env2[i] = u(i+c.Nx*(Nyloc-1));//0.8*u(i+c.Nx*(Nyloc-1)) + 0.55*(-u(i+c.Nx*(Nyloc-1))+ u(i+c.Nx*(Nyloc-1)-c.Nx))/c.dy;//u(i+c.Nx*(Nyloc-1));//0.5*u(i+c.Nx*(Nyloc-1)) + 0.5*(u(i+c.Nx*(Nyloc-1))- u(i+c.Nx*(Nyloc-1)-c.Nx))/c.dy;
+        // alpha u(i+c.Nx*(Nyloc-1)) + beta u(i+c.Nx*(Nyloc-1)-c.Nx)
 
         //std::cout << "env2" << env2[i] << std::endl;
       }
@@ -180,6 +180,18 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
         g1(i) = c.D*rev2[i]/(c.dy*c.dy);
         g2(i) = c.D*rev1[i]/(c.dy*c.dy);
       }
+    }
+  }
+
+  if(c.np==1)
+  {
+    g1.resize(c.Nx);
+    g2.resize(c.Nx);
+
+    for(int i=0; i<c.Nx; i++)
+    {
+      g1(i) = c.D*g(i, 0, c)/(c.dy*c.dy);
+      g2(i) = c.D*g(i, c.Ny-1, c)/(c.dy*c.dy);
     }
   }
   MPI_Barrier(MPI_COMM_WORLD);
@@ -256,8 +268,8 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,E
 {
   int _k(0), itemax(250);
   Eigen::VectorXd rk(A.rows()), rk1(A.rows()), z(A.rows()), p(A.rows());
-  double alpha;
-  double gamma;
+  double alpha(1.0);
+  double gamma(1.0);
   rk = b;
   double beta = rk.norm();
   p = rk;
@@ -268,7 +280,7 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,E
     u(i)=0.;
   }
 
-  while (/*(beta > 0.001) && */(_k < itemax))
+  while ((beta > tolerance) && (_k < itemax))
   {
     z = A*p;
     alpha = (rk.dot(rk))/(z.dot(p)+DBL_EPSILON);
@@ -288,33 +300,52 @@ void Gradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,E
   void BIGradientconjugue(Eigen::MatrixXd A, Eigen::VectorXd& u, Eigen::VectorXd b,Eigen::VectorXd x0 ,double tolerance, int kmax, config_t& c, int me)
     {
       int _k(0), itemax(150);
-      Eigen::VectorXd rk(A.rows()), rk1(A.rows()), z(A.rows()), p(A.rows()),s(A.rows()),z2(A.rows());
-      double alpha,w,bet;
+      Eigen::MatrixXd K(A.rows(),A.cols());
+      Eigen::VectorXd rk(A.rows()), rk1(A.rows()), z(A.rows()), p(A.rows()),s(A.rows()),z3(A.rows()),z2(A.rows()),r0(A.rows()),y(A.rows()),t(A.rows());
+      double alpha,w,bet,rho,rho1;
       double beta = rk.norm();
-      double gamma;
       rk = b;
-      p = rk;
+      r0 = b;
+
+      alpha=1;
+      rho=1;
+      rho1=1;
+      w=1;
       beta = rk.norm();
       for(int i=0; i<A.rows(); i++)
       {
-        rk1(i)=0.;
-        u(i)=0.;
+        //for(int j=0;j<A.cols();j++)
+        //{
+          rk1(i)=0.;
+          u(i)=0.;
+          p(i)=0.;
+          K(i,i)=1/A(i,i);
+          //std::cout << K(i,i) << std::endl;
+          //K(i,j)=0;
+          //K(j,i)=0;
+        //}
       }
 
-      while ((beta > 0.000001) && (_k < itemax))
+      while ((beta > tolerance) && (_k < itemax))
       {
-        z = A*p;
-        alpha = (rk.dot(b))/(z.dot(b));
+        rho1=rk.dot(r0);
+        bet=alpha*rho1/(rho*w);
+        p=rk+bet*(p-w*z);
+        y= K*p;
+        z = A*y;
+        alpha = (rho1)/(z.dot(b));
+
         s=rk-alpha*z;
-        z2= A*s;
-        w=(z2.dot(s)/(z2.dot(z2)));
-        u = u + alpha*p+w*s;
+        t=K*s;
+        z2= A*t;
+        z3= K*z2;
+        w=(z3.dot(t)/(z3.dot(z3)));
+        u = u + alpha*y+w*t;
         rk1 = s - w*z2;
 
-        bet=(alpha/w)*(rk1.dot(b)/(rk.dot(b)));
-        p=rk1+bet*(p-w*z);
         beta = rk.norm();
         rk=rk1;
+        rho=rho1;
         _k = _k + 1;
       }
       MPI_Barrier(MPI_COMM_WORLD);

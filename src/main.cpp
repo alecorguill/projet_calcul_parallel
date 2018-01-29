@@ -42,7 +42,10 @@ int main(int argc, char** argv){
   c.dt = 10;
   c.output = output;
   int i0,i1,kmax,m,n,i,Nyloc,convloc, conv;
-  double tolerance(1.E-6);
+  double tolerance(1.E-8);
+  double tolerance2(1.E-10);
+  double tolerance3(1.E-4);
+
   kmax =10000;
   charge(me,i0,i1,c);
   //cout << "Je suis me "<< me << " et i0 et i1 valent " << i0 << " " << i1 << endl;
@@ -62,26 +65,26 @@ int main(int argc, char** argv){
   //cout << "Je suis me : " << me << " et voilà Aloc : "<<Aloc << endl;
   //second_membre(me,u,c);
   i=0;
-  while((i<10000) && (conv!=0))
+  while((i<20)/* && (conv!=0)*/)
   {
     w =second_membre(me, u, c);
     //cout<<"Je suis me "<<me << " voilà x0 : " << x0 << endl;
     //cout<< "Voila la conv : " << convloc;
     utemp = u;
-    //Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
-    BIGradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
+    Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
+    //BIGradientconjugue(Aloc,u,w,x0 ,tolerance2, kmax, c, me);
 
     //cout << "Voila utemp :" <<utemp;
     //cout << "Je suis me 2 : " << me << " et voila u : " << u << endl;
-    convloc = Convergence(utemp, u, tolerance);
+    convloc = Convergence(utemp, u, tolerance3);
     //cout<< "Voila la convloc : " << convloc;
     MPI_Allreduce(&convloc, &conv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    MPI_Barrier(MPI_COMM_WORLD);
+    //MPI_Barrier(MPI_COMM_WORLD);
     i++;
     // cout<<i<<endl;
     //fflush(stdout);
   }
-  cout<<"Je suis sorti avec tant d'itérations : " <<i<<endl;
+  //cout<<"Je suis sorti avec tant d'itérations : " <<i<<endl;
 
   log_result(c.output,u);
 
