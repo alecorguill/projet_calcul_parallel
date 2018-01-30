@@ -11,6 +11,6 @@ rm -f $file
 make
 for i in {1..8..1}
 do
-    echo -n "$i " >> $file  
+    echo -n "$i " >> $file
     { /usr/bin/time -f "%e" mpirun --mca pml ob1 -np $i run config.cfg ; } 2>> $file
 done

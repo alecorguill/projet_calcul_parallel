@@ -44,16 +44,13 @@ int main(int argc, char** argv){
   int i0,i1,kmax,m,n,i,Nyloc,convloc, conv;
   double tolerance(1.E-8);
   double tolerance2(1.E-10);
-  double tolerance3(1.E-4);
-
+  double tolerance3(1.E-8);
   kmax =10000;
   charge(me,i0,i1,c);
-  //cout << "Je suis me "<< me << " et i0 et i1 valent " << i0 << " " << i1 << endl;
   indice(i1, m, n, c);
-  //cout << m << "   " << n << endl;
   Nyloc=(i1-i0+1)/c.Nx;
   conv =1;
-  //
+
 
   Eigen::VectorXd u = Eigen::VectorXd::Zero(c.Nx*Nyloc);
   Eigen::VectorXd utemp = Eigen::VectorXd::Zero(c.Nx*Nyloc);
@@ -62,29 +59,40 @@ int main(int argc, char** argv){
   Eigen::MatrixXd Aloc = Eigen::MatrixXd::Zero(c.Nx*Nyloc,c.Nx*Nyloc);
 
   Remplissage(Aloc,c.Nx,Nyloc,c);
-  //cout << "Je suis me : " << me << " et voilà Aloc : "<<Aloc << endl;
-  //second_membre(me,u,c);
   i=0;
-  while((i<20)/* && (conv!=0)*/)
+  while((i<1000) && (conv!=0))
   {
     w =second_membre(me, u, c);
-    //cout<<"Je suis me "<<me << " voilà x0 : " << x0 << endl;
-    //cout<< "Voila la conv : " << convloc;
-    utemp = u;
-    Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
-    //BIGradientconjugue(Aloc,u,w,x0 ,tolerance2, kmax, c, me);
 
-    //cout << "Voila utemp :" <<utemp;
-    //cout << "Je suis me 2 : " << me << " et voila u : " << u << endl;
+    utemp = u;
+    //Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
+    BIGradientconjugue(Aloc,u,w,x0 ,tolerance2, kmax, c, me);
+
     convloc = Convergence(utemp, u, tolerance3);
-    //cout<< "Voila la convloc : " << convloc;
+
+    //TOLERANCE ADAPTATIVE
+    /*
+    if (c.np==1)
+    {
+      Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
+      convloc = Convergence(utemp, u, tolerance);
+
+    }
+    else
+    {
+      Gradientconjugue(Aloc,u,w,x0 , 1.E-2, kmax, c, me);
+      if(c.np>2)
+      convloc = Convergence(utemp, u, 1.E-2/(c.np-1));
+      else
+      convloc = Convergence(utemp, u, 1.E-2);
+    }
+    */
+
     MPI_Allreduce(&convloc, &conv, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-    //MPI_Barrier(MPI_COMM_WORLD);
     i++;
-    // cout<<i<<endl;
-    //fflush(stdout);
+
   }
-  //cout<<"Je suis sorti avec tant d'itérations : " <<i<<endl;
+  cout<<"Je suis sorti avec tant d'itérations : " <<i<<endl;
 
   log_result(c.output,u);
 
@@ -93,7 +101,6 @@ int main(int argc, char** argv){
     for(int i=0; i<i1-i0+1; i++)
     {
       indice(i0+i, m, n, c);
-      //cout<< "test " << i0  << " " << i1 << " " << i << " " << " " << m << " "  << n <<  endl;
       //cout << 2*( m*c.dx*(1-m*c.dx)*n*c.dy*(1-n*c.dy)) << endl;
     }
   }
