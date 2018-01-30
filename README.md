@@ -19,6 +19,6 @@ Il faut rentrer les valeurs désirées avant d'exécuter le programme.
 &nbsp;&nbsp; Le script  script.sh permet de générer un fichier csv que l'on peut visualiser avec le programme plot_csv.py.
 Le makefile encapsule ces étapes comme ceci :
 
-    make speedup
+    make courbe
 
 
