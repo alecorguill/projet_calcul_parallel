@@ -65,8 +65,10 @@ int main(int argc, char** argv){
     w =second_membre(me, u, c);
 
     utemp = u;
-    //Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
-    BIGradientconjugue(Aloc,u,w,x0 ,tolerance2, kmax, c, me);
+    //solveur gradient conjugué
+    Gradientconjugue(Aloc,u,w,x0 ,tolerance, kmax, c, me);
+    //solveur BIgradient conjugué préconditionné
+    //BIGradientconjugue(Aloc,u,w,x0 ,tolerance2, kmax, c, me);
 
     convloc = Convergence(utemp, u, tolerance3);
 

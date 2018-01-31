@@ -121,7 +121,10 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
     {
       for(int i=0; i<c.Nx; i++)
       {
-        env1[i] = u(i);//0.2*u(i) + 0.5*(-u(i)+u(i+c.Nx))/c.dy;//u(i);//0.5*u(i) + 0.5*(u(i)-u(i+c.Nx))/c.dy;
+        // pour la premiere gestion du recouvrment
+        env1[i] = u(i);
+        //Pour la seconde gestion du recouvremnt
+        //env1[i]=0.2*u(i) + 0.5*(-u(i)+u(i+c.Nx))/c.dy;//u(i);//0.5*u(i) + 0.5*(u(i)-u(i+c.Nx))/c.dy;
         // alpha u(i) + beta u(i+c.Nx)
       }
       MPI_Send(env1, c.Nx, MPI_DOUBLE, me-1, tag+2*me, MPI_COMM_WORLD);
@@ -131,7 +134,10 @@ Eigen::VectorXd second_membre(int me, Eigen::VectorXd u, config_t& c)
     {
       for(int i=0; i<c.Nx; i++)
       {
-        env2[i] = u(i+c.Nx*(Nyloc-1));//0.2*u(i+c.Nx*(Nyloc-1)) + 0.5*(-u(i+c.Nx*(Nyloc-1))+ u(i+c.Nx*(Nyloc-1)-c.Nx))/c.dy;
+        //pour la première gestion du recouvrement
+        env2[i] = u(i+c.Nx*(Nyloc-1));
+        //pour la seconde gestion du recouvrement
+        //envi2[i]=0.2*u(i+c.Nx*(Nyloc-1)) + 0.5*(-u(i+c.Nx*(Nyloc-1))+ u(i+c.Nx*(Nyloc-1)-c.Nx))/c.dy;
         // alpha u(i+c.Nx*(Nyloc-1)) + beta u(i+c.Nx*(Nyloc-1)-c.Nx)
 
       }
